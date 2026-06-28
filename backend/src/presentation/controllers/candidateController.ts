@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { addCandidate, findCandidateById } from '../../application/services/candidateService';
+import { updateCandidateStage, StageUpdateError } from '../../application/services/applicationService';
+import { parseId } from '../utils/requestParams';
 
 export const addCandidateController = async (req: Request, res: Response) => {
     try {
@@ -28,6 +30,36 @@ export const getCandidateById = async (req: Request, res: Response) => {
         res.json(candidate);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+/**
+ * PUT /candidates/:id/stage
+ * Actualiza la fase del candidato en el proceso de una posición.
+ * Body: { positionId: number, currentInterviewStep: number }
+ */
+export const updateCandidateStageController = async (req: Request, res: Response) => {
+    try {
+        const candidateId = parseId(req.params.id);
+        if (candidateId === null) {
+            return res.status(400).json({ error: 'Invalid candidate ID format' });
+        }
+
+        const { positionId, currentInterviewStep } = req.body;
+        if (!Number.isInteger(positionId) || !Number.isInteger(currentInterviewStep)) {
+            return res.status(400).json({
+                error: 'positionId and currentInterviewStep are required and must be integers',
+            });
+        }
+
+        const updated = await updateCandidateStage(candidateId, positionId, currentInterviewStep);
+        return res.status(200).json({ message: 'Candidate stage updated successfully', data: updated });
+    } catch (error) {
+        if (error instanceof StageUpdateError) {
+            return res.status(error.statusCode).json({ error: error.message });
+        }
+        console.error('Error updating candidate stage:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 

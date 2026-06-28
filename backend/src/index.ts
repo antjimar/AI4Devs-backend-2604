@@ -3,8 +3,11 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import candidateRoutes from './routes/candidateRoutes';
+import positionRoutes from './routes/positionRoutes';
 import { uploadFile } from './application/services/fileUploadService';
 import cors from 'cors';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // Extender la interfaz Request para incluir prisma
 declare global {
@@ -36,8 +39,25 @@ app.use(cors({
   credentials: true
 }));
 
+// Swagger / OpenAPI: documentación de los endpoints anotados en las rutas
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'LTI - Talent Tracking System API',
+      version: '1.0.0',
+      description: 'API del backend de LTI (ATS). Endpoints del Kanban de candidatos.',
+    },
+  },
+  apis: ['./src/routes/*.ts'],
+});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Import and use candidateRoutes
 app.use('/candidates', candidateRoutes);
+
+// Import and use positionRoutes
+app.use('/positions', positionRoutes);
 
 // Route for file uploads
 app.post('/upload', uploadFile);
