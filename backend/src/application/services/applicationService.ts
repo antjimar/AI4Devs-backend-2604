@@ -1,20 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { DomainError } from '../errors';
 
 const prisma = new PrismaClient();
 
 /**
- * Error de dominio para distinguir, en el controlador, entre un fallo de
- * validación/regla de negocio (400) y un recurso inexistente (404).
+ * Error de la actualización de etapa. Es un DomainError (lleva statusCode), lo
+ * que permite al controlador mapearlo a 400/404 sin comparar el texto.
  */
-export class StageUpdateError extends Error {
-    constructor(message: string, public readonly statusCode: 400 | 404) {
-        super(message);
-        this.name = 'StageUpdateError';
-        // Con target es5, extender Error rompe la cadena de prototipos y
-        // `instanceof` deja de funcionar; restaurarla manualmente lo arregla.
-        Object.setPrototypeOf(this, StageUpdateError.prototype);
-    }
-}
+export class StageUpdateError extends DomainError {}
 
 /**
  * Actualiza la fase actual (currentInterviewStep) de un candidato en el
@@ -41,8 +34,13 @@ export const updateCandidateStage = async (
             throw new StageUpdateError('Candidate not found', 404);
         }
 
+        // En el dominio un candidato tiene una sola aplicación por posición, pero
+        // el schema base no lo fuerza con un @@unique. Ordenamos por id para que el
+        // lookup sea determinista (siempre la misma fila) y nunca actúe sobre una
+        // aplicación arbitraria si hubiera datos duplicados.
         const application = await tx.application.findFirst({
             where: { candidateId, positionId },
+            orderBy: { id: 'asc' },
         });
         if (!application) {
             throw new StageUpdateError('Application not found for this candidate and position', 404);

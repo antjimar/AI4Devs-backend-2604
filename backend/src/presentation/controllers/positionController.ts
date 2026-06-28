@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { getCandidatesByPosition } from '../../application/services/positionService';
+import { DomainError } from '../../application/errors';
 import { parseId } from '../utils/requestParams';
 
 /**
@@ -16,8 +17,8 @@ export const getCandidatesByPositionController = async (req: Request, res: Respo
         const candidates = await getCandidatesByPosition(positionId);
         return res.status(200).json(candidates);
     } catch (error) {
-        if (error instanceof Error && error.message === 'Position not found') {
-            return res.status(404).json({ error: 'Position not found' });
+        if (error instanceof DomainError) {
+            return res.status(error.statusCode).json({ error: error.message });
         }
         console.error('Error retrieving candidates for position:', error);
         return res.status(500).json({ error: 'Internal Server Error' });

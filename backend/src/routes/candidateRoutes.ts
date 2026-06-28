@@ -31,6 +31,7 @@ router.get('/:id', getCandidateById);
  *         required: true
  *         schema:
  *           type: integer
+ *           minimum: 1
  *         description: ID del candidato
  *     requestBody:
  *       required: true
@@ -42,9 +43,11 @@ router.get('/:id', getCandidateById);
  *             properties:
  *               positionId:
  *                 type: integer
+ *                 minimum: 1
  *                 description: Posición cuyo proceso se actualiza
  *               currentInterviewStep:
  *                 type: integer
+ *                 minimum: 1
  *                 description: ID del nuevo InterviewStep (debe pertenecer al flujo de la posición)
  *     responses:
  *       200:

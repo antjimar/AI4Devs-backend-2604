@@ -15,6 +15,7 @@ const router = Router();
  *         required: true
  *         schema:
  *           type: integer
+ *           minimum: 1
  *         description: ID de la posición
  *     responses:
  *       200:

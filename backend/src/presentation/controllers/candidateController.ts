@@ -46,9 +46,14 @@ export const updateCandidateStageController = async (req: Request, res: Response
         }
 
         const { positionId, currentInterviewStep } = req.body;
-        if (!Number.isInteger(positionId) || !Number.isInteger(currentInterviewStep)) {
+        if (
+            !Number.isInteger(positionId) ||
+            positionId <= 0 ||
+            !Number.isInteger(currentInterviewStep) ||
+            currentInterviewStep <= 0
+        ) {
             return res.status(400).json({
-                error: 'positionId and currentInterviewStep are required and must be integers',
+                error: 'positionId and currentInterviewStep are required and must be positive integers',
             });
         }
 

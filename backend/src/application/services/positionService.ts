@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { DomainError } from '../errors';
 
 const prisma = new PrismaClient();
 
@@ -52,12 +53,12 @@ export interface CandidateInProcess {
  * puntuación media de las entrevistas de ESA aplicación (ignorando los
  * scores nulos). Si no hay entrevistas con score, averageScore es null.
  *
- * @throws {Error} con mensaje 'Position not found' si la posición no existe.
+ * @throws {DomainError} 404 si la posición no existe.
  */
 export const getCandidatesByPosition = async (positionId: number): Promise<CandidateInProcess[]> => {
     const position = await prisma.position.findUnique({ where: { id: positionId } });
     if (!position) {
-        throw new Error('Position not found');
+        throw new DomainError('Position not found', 404);
     }
 
     const applications = await prisma.application.findMany({
